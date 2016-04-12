@@ -55,7 +55,7 @@ def ssh_cmd(ssh_client, cmd, timeout=2):
         time.sleep(0.1)
 
     if exit_status != 0:
-        raise Exception('%r' % stderr)
+        raise Exception('{0!r}'.format(stderr))
 
     return stdout, stderr
 
@@ -72,13 +72,13 @@ def _bootstrap(addr):
     golang_version = tornado.options.options.golang_version
     ssh_client = ssh_connect_with_retries(addr)
     for cmd in [
-            'wget https://storage.googleapis.com/golang/go%s.linux-amd64.tar.gz' % golang_version,
-            'sudo -S tar -C /usr/local -xzf go%s.linux-amd64.tar.gz' % golang_version,
+            'wget https://storage.googleapis.com/golang/go{0!s}.linux-amd64.tar.gz'.format(golang_version),
+            'sudo -S tar -C /usr/local -xzf go{0!s}.linux-amd64.tar.gz'.format(golang_version),
             'sudo -S apt-get update',
             'sudo -S apt-get -y install git mercurial',
             'mkdir -p go/src/github.com/nsqio',
             'cd go/src/github.com/nsqio && git clone https://github.com/nsqio/nsq',
-            'cd go/src/github.com/nsqio/nsq && git checkout %s' % commit,
+            'cd go/src/github.com/nsqio/nsq && git checkout {0!s}'.format(commit),
             'sudo -S curl -s -o /usr/local/bin/gpm \
                 https://raw.githubusercontent.com/pote/gpm/v1.2.3/bin/gpm',
             'sudo -S chmod +x /usr/local/bin/gpm',
@@ -148,9 +148,9 @@ def run():
                     'sudo -S pkill -f nsqd',
                     'sudo -S rm -f /mnt/nsq/*.dat',
                     'GOMAXPROCS=32 ./go/src/github.com/nsqio/nsq/apps/nsqd/nsqd \
-                        --data-path=/mnt/nsq --mem-queue-size=10000000 --max-rdy-count=%s' % (
+                        --data-path=/mnt/nsq --mem-queue-size=10000000 --max-rdy-count={0!s}'.format((
                         tornado.options.options.rdy
-                        )]:
+                        ))]:
                 nsqd_chans.append((ssh_client, ssh_cmd_async(ssh_client, cmd)))
         except Exception:
             logging.exception('failed')
@@ -175,7 +175,7 @@ def run():
                 for cmd in [
                         'GOMAXPROCS=2 \
                             ./go/src/github.com/nsqio/nsq/bench/bench_writer/bench_writer \
-                            --topic=%s --nsqd-tcp-address=%s:4150 --deadline=\'%s\' --size=%d' % (
+                            --topic={0!s} --nsqd-tcp-address={1!s}:4150 --deadline=\'{2!s}\' --size={3:d}'.format(
                             topic, nsqd_tcp_addr, deadline.strftime('%Y-%m-%d %H:%M:%S'),
                             tornado.options.options.msg_size)]:
                     worker_chans.append((ssh_client, ssh_cmd_async(ssh_client, cmd)))
@@ -196,8 +196,8 @@ def run():
                     for cmd in [
                             'GOMAXPROCS=8 \
                                 ./go/src/github.com/nsqio/nsq/bench/bench_reader/bench_reader \
-                                --topic=%s --nsqd-tcp-address=%s:4150 --deadline=\'%s\' --size=%d \
-                                --rdy=%d' % (
+                                --topic={0!s} --nsqd-tcp-address={1!s}:4150 --deadline=\'{2!s}\' --size={3:d} \
+                                --rdy={4:d}'.format(
                                 topic, nsqd_tcp_addr, deadline.strftime('%Y-%m-%d %H:%M:%S'),
                                 tornado.options.options.msg_size, tornado.options.options.rdy)]:
                         worker_chans.append((ssh_client, ssh_cmd_async(ssh_client, cmd)))
@@ -272,7 +272,7 @@ def decomm():
     conn = connect_to_ec2()
     hosts = _find_hosts()
     host_ids = [h[0] for h in hosts]
-    logging.info('terminating instances %s' % ','.join(host_ids))
+    logging.info('terminating instances {0!s}'.format(','.join(host_ids)))
     conn.terminate_instances(host_ids)
 
 
